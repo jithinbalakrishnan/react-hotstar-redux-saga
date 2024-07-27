@@ -1,14 +1,19 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  MOVIE_LIST_URL,
-  MOVIE_SEARCH_URL,
-} from "../constants/constant";
+import { MOVIE_LIST_URL, MOVIE_SEARCH_URL } from "../constants/constant";
 import Cards from "./Cards/Cards";
 import useDebounce from "../utils/CustomHooks/useDebounce";
+
+import { actionRequestMovieList } from "../redux/reducers/movieReducer";
+import { useDispatch, useSelector } from "react-redux";
+import { selectMovieList } from "../redux/selectors";
 
 const Home = () => {
   const [searchText, setSearchText] = useState("");
   const [movieList, setMovieList] = useState([]);
+
+  const dispatch = useDispatch();
+
+  const movieData = useSelector(selectMovieList);
 
   const debouncedInputValue = useDebounce(searchText, 1000);
 
@@ -17,22 +22,15 @@ const Home = () => {
       getSearchResults(debouncedInputValue);
     }
     {
-      fetchMovies();
+      dispatch(actionRequestMovieList());
     }
   }, [debouncedInputValue]);
 
-  const fetchMovies = () => {
-    try {
-      fetch(MOVIE_LIST_URL)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("data", data.results);
-          setMovieList(data?.results);
-        });
-    } catch (err) {
-      console.log("err");
+  useEffect(() => {
+    if (movieData) {
+      setMovieList(movieData);
     }
-  };
+  }, [movieData]);
 
   const getSearchResults = (value) => {
     try {
